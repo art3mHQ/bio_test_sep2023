@@ -16,11 +16,7 @@ https://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.h
 
 2. Usage is more or less straitforward
 
-## Settings
-
-Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
-
-## Basic Commands
+3. Api Swagger avalible at api/docs/ section (for admin)
 
 ### Setting Up Your Users
 
