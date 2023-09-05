@@ -10,7 +10,7 @@ Hi there!
 Task-Backend-1
 "531"
 
-1. to setup run localy follow instruction
+1. to setup and run localy follow instruction
 
 https://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.html
 
