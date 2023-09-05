@@ -1,0 +1,578 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}
+  {% translate "Sign In" %}
+{% endblock head_title %}
+{% block inner %}
+  <h1>{% translate "Sign In" %}</h1>
+  {% get_providers as socialaccount_providers %}
+  {% if socialaccount_providers %}
+    <p>
+      {% translate "Please sign in with one of your existing third party accounts:" %}
+      {% if ACCOUNT_ALLOW_REGISTRATION %}
+        {% blocktranslate trimmed %}
+          Or, <a href="{{ signup_url }}">sign up</a>
+          for a {{ site_name }} account and sign in below:
+        {% endblocktranslate %}
+      {% endif %}
+    </p>
+    <div class="socialaccount_ballot">
+      <ul class="socialaccount_providers">
+        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+      </ul>
+      <div class="login-or">{% translate "or" %}</div>
+    </div>
+    {% include "socialaccount/snippets/login_extra.html" %}
+  {% else %}
+    {% if ACCOUNT_ALLOW_REGISTRATION %}
+      <p>
+        {% blocktranslate trimmed %}
+          If you have not created an account yet, then please
+          <a href="{{ signup_url }}">sign up</a> first.
+        {% endblocktranslate %}
+      </p>
+    {% endif %}
+  {% endif %}
+  <form class="login" method="post" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    {{ form|crispy }}
+    {% if redirect_field_value %}
+      <input type="hidden"
+             name="{{ redirect_field_name }}"
+             value="{{ redirect_field_value }}" />
+    {% endif %}
+    <div id="div_id_otp" class="mb-3">
+      <input type="otp"
+             name="otp"
+             placeholder="OTP..."
+             class="form-control"
+             required=""
+             id="id_otp" />
+      <span><small>to get otp fill your e-mail adr and push the btn below</small></span>
+    </div>
+    <a class="button secondaryAction"
+       href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
+    <button class="primaryAction btn btn-primary" type="submit">{% translate "Sign In" %}</button>
+    <button class="btn btn-secondary" type="submit" id="send-otp">send otp</button>
+  </form>
+  <br />
+  <!-- Buttons trigger modal -->
+  <div class="api-controls" hidden>
+    <p>Now you can fetch user profile, update user profile, and delete the account using DRF!</p>
+    <button type="button" class="btn btn-success" id="userModalBtn">get user detail</button>
+    <button type="button"
+            class="btn btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#update-user-data-modal">update user detail</button>
+    <button type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#delete-modal">delete account</button>
+  </div>
+  <!-- Modal 1 -->
+  <div class="modal fade get-user-data-modal"
+       id="get-user-data-modal"
+       tabindex="-1"
+       aria-labelledby="exampleModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="get-user-data-modal-Label">
+            <span style="color:#FF0000">H</span>
+            <span style="color:#66CC66">e</span>
+            <span style="color:#FF9966">l</span>
+            <span style="color:#FFCCCC">l</span>
+            <span style="color:#FF0066">o</span> Your profile info
+          </h1>
+        </div>
+        <div class="get-user-data-modal-body container"></div>
+        <div class="modal-footer">
+          <!-- button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal 2 -->
+  <div class="modal fade"
+       id="update-user-data-modal"
+       tabindex="-1"
+       aria-labelledby="exampleModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="update-user-data-modal-Label">
+            <span style="color:#FF0000">U</span>
+            <span style="color:#66CC66">p</span>
+            <span style="color:#FF9966">d</span>
+            <span style="color:#FFCCCC">a</span>
+            <span style="color:#A1CCCC">t</span>
+            <span style="color:#FF0066">e</span> profile info!
+          </h1>
+        </div>
+        <div class="get-user-data-modal-body">
+          <div class="container upd-btn-cont">
+            <input type="name" name="name-field" placeholder="type new name" />
+            <button type="button" class="btn btn-secondary" id="updNameBtn">update name</button>
+          </div>
+          <!--div class="container">
+            <input type="useremail" name="useremail" placeholder="type new email" />
+            <button type="button" class="btn btn-warning">update e-mail</button>
+           </div -->
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal 3 -->
+  <div class="modal fade"
+       id="delete-modal"
+       tabindex="-1"
+       aria-labelledby="exampleModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="delete-user-data-modal-Label">
+            <span style="color:#FF0000">D</span>
+            <span style="color:#66CC66">E</span>
+            <span style="color:#FF9966">L</span>
+            <span style="color:#FFCCCC">E</span>
+            <span style="color:#A1CCCC">T</span>
+            <span style="color:#FF0066">E</span> profile!?
+          </h1>
+        </div>
+        <div class="delete-user-data-modal-body">
+          <div class="container upd-btn-cont">
+            <p>are you sure?</p>
+            <button type="button" class="btn btn-danger" id="deleteBtn">yes, burn</button>
+          </div>
+          <!--div class="container">
+            <input type="useremail" name="useremail" placeholder="type new email" />
+            <button type="button" class="btn btn-warning">update e-mail</button>
+           </div -->
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // --------------------------------------------------
+    // send otp
+    // --------------------------------------------------
+
+    const otpForm = document.getElementById("send-otp");
+
+    otpForm.addEventListener("click", e => {
+
+      e.preventDefault();
+
+      let idEmail = document.getElementById("id_login");
+
+      // email validator simple
+      function validateEmail(email) {
+        var re = /\S+@\S+\.\S+/;
+        return re.test(email);
+      }
+
+      if (validateEmail(idEmail.value)) {
+
+        const data = JSON.stringify({
+          "email_address": idEmail.value,
+        });
+
+        fetch("/dj-rest-auth/get-otp/", {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: data
+          })
+          .then(resp => {
+
+            console.log("Status: " + resp.status);
+            if (resp.ok) {
+
+              console.log(resp)
+            }
+
+            return resp.json()
+          })
+
+          .then(dataJson => {
+
+            // dataToRecieved = JSON.parse(dataJson);
+            console.log(dataJson);
+
+            // wipe old error msg
+            const collection = document.querySelectorAll(".valid-feedback");
+            if (collection) {
+              for (const elem of collection) {
+                elem.remove();
+              }
+            }
+
+            if (dataJson.result) {
+
+              // create a new div element
+              const newDiv6 = document.createElement("span");
+
+              // and give it some content
+              someText6 = JSON.stringify(dataJson.result)
+              const newContent6 = document.createTextNode(someText6);
+
+              // add the text node to the newly created div
+              newDiv6.appendChild(newContent6);
+              newDiv6.setAttribute("class", "valid-feedback");
+              newDiv6.setAttribute("style", "display:block");
+
+              // add the newly created element and its content into the DOM
+              id_otp.parentNode.appendChild(newDiv6);
+            }
+
+          })
+
+          .catch(err => {
+            console.log(err);
+          })
+
+      } else {
+        // wipe old error msg
+        const collection = document.querySelectorAll(".invalid-feedback");
+        if (collection) {
+          for (const elem of collection) {
+            elem.remove();
+          }
+        }
+
+
+        // create a new div element
+        const newDiv6 = document.createElement("span");
+
+        // and give it some content
+        someText6 = "['invalid email, dude']"
+        const newContent6 = document.createTextNode(someText6);
+
+        // add the text node to the newly created div
+        newDiv6.appendChild(newContent6);
+        newDiv6.setAttribute("class", "invalid-feedback");
+        newDiv6.setAttribute("style", "display:block");
+
+        // add the newly created element and its content into the DOM
+        idEmail.parentNode.appendChild(newDiv6);
+
+      }
+    });
+
+
+
+    // --------------------------------------------------
+    // login
+    // --------------------------------------------------
+
+    const signinForm = document.querySelector(".login");
+
+    signinForm.addEventListener("submit", e => {
+
+      event.preventDefault();
+
+      let csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+      let idEmail = document.getElementById("id_login");
+      let password = document.getElementById("id_password");
+      let otp_field = document.getElementById("id_otp");
+
+
+      const data = JSON.stringify({
+        // "csrfmiddlewaretoken": csrf,
+        "email": idEmail.value,
+        "password": password.value,
+        "otp": otp_field.value
+      });
+
+      fetch("/dj-rest-auth/login/", {
+          credentials: 'same-origin',
+          mode: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: "POST",
+          body: data
+        })
+        .then(resp => {
+
+          console.log("Status: " + resp.status);
+          if (resp.ok) {
+
+            // show btns
+            const controlBtns = document.querySelector(".api-controls")
+            const inpForm = document.querySelector("form.login")
+            inpForm.setAttribute("hidden", "")
+            controlBtns.removeAttribute("hidden")
+          }
+          return resp.json()
+        })
+
+        .then(dataJson => {
+
+          // dataToRecieved = JSON.parse(dataJson);
+          console.log(dataJson);
+
+          // wipe old error msg
+          const collection = document.querySelectorAll(".invalid-feedback");
+          if (collection) {
+            for (const elem of collection) {
+              elem.remove();
+            }
+          }
+
+          if (dataJson.key) {
+            let keyToken = dataJson.key
+            localStorage.setItem('key', keyToken)
+            console.log(keyToken)
+          }
+
+          if (dataJson.email) {
+
+            // idEmail.classList.add("is-invalid");
+
+
+
+            // create a new div element
+            const newDiv1 = document.createElement("p");
+
+            // and give it some content
+            someText1 = JSON.stringify(dataJson.email)
+            const newContent1 = document.createTextNode(someText1);
+
+            // add the text node to the newly created div
+            newDiv1.appendChild(newContent1);
+            newDiv1.setAttribute("class", "invalid-feedback");
+            newDiv1.setAttribute("style", "display:block");
+
+            // add the newly created element and its content into the DOM
+            idEmail.parentNode.appendChild(newDiv1);
+          }
+
+          if (dataJson.password1 || dataJson.non_field_errors) {
+
+            // password.classList.add("is-invalid");
+
+            // create a new div element
+            const newDiv2 = document.createElement("p");
+
+            // and give it some content
+            someText2 = JSON.stringify(dataJson.password1) || JSON.stringify(dataJson.non_field_errors)
+
+            const newContent2 = document.createTextNode(someText2);
+
+            // add the text node to the newly created div
+            newDiv2.appendChild(newContent2);
+            newDiv2.setAttribute("class", "invalid-feedback");
+            newDiv2.setAttribute("style", "display:block");
+
+            // add the newly created element and its content into the DOM
+            password.parentNode.appendChild(newDiv2);
+          }
+
+        })
+
+        .catch(err => {
+          console.log(err);
+        })
+    });
+
+    // --------------------------------------------------
+    // fetch user detail
+    // --------------------------------------------------
+
+    const getUserDataBtn = document.getElementById("userModalBtn");
+
+    getUserDataBtn.addEventListener("click", e => {
+
+      e.preventDefault();
+
+      fetch("/dj-rest-auth/user/", {
+          headers: {
+            Authorization: `Token ${localStorage.getItem('key')}`
+          },
+          method: "get",
+        })
+        .then(resp => {
+
+          console.log("Status: " + resp.status);
+          return resp.json()
+
+        })
+
+        .then(dataJson => {
+          // dataToRecieved = JSON.parse(dataJson);
+          // console.log(dataJson);
+
+          // wipe old msg
+          const collection = document.querySelectorAll(".user-feedback");
+          if (collection) {
+            for (const elem of collection) {
+              elem.remove();
+            }
+          }
+          // create a new div element
+          const newDiv3 = document.createElement("p");
+
+          // and give it some content
+          someText3 = JSON.stringify(dataJson, null, '\r')
+          const newContent3 = document.createTextNode(someText3);
+          console.log(someText3)
+
+          // add the text node to the newly created div
+          newDiv3.appendChild(newContent3);
+          newDiv3.setAttribute("class", "user-feedback");
+          newDiv3.setAttribute("style", "white-space: pre-wrap");
+
+          // add the newly created element and its content into the DOM
+          const userModalInside = document.querySelector(".get-user-data-modal-body")
+          userModalInside.appendChild(newDiv3);
+
+          const userModal = new bootstrap.Modal('#get-user-data-modal');
+          userModal.show();
+
+
+
+        })
+    });
+
+    // --------------------------------------------------
+    // update name
+    // --------------------------------------------------
+
+    const updUserDataBtn = document.getElementById("updNameBtn");
+
+
+
+
+    updUserDataBtn.addEventListener("click", e => {
+
+
+      const inpField = document.getElementsByName("name-field")[0];
+      console.log('ffffffffff-ff')
+      console.log(inpField.value, )
+
+      const data = JSON.stringify({
+        "name": inpField.value
+      });
+      console.log(data)
+
+      fetch("/dj-rest-auth/user/", {
+          // mode: 'no-cors',
+          // credentials:'omit',
+          headers: {
+            Authorization: `Token ${localStorage.getItem('key')} `,
+            // 'X-CSRFToken': csrf,
+            'Content-Type': 'application/json',
+          },
+          method: "PATCH",
+          body: data
+        })
+        .then(resp => {
+
+          console.log("Status: " + resp.status);
+          if (resp.ok) {
+            return resp.json()
+          }
+        })
+
+        .then(dataJson => {
+          // dataToRecieved = JSON.parse(dataJson);
+          console.log(dataJson);
+
+
+
+          // wipe old msg
+          const collect = document.querySelectorAll(".user-upd-status");
+          if (collect) {
+            for (const elem of collect) {
+              elem.remove();
+            }
+          }
+
+          // create a new div element
+          const newDiv4 = document.createElement("span");
+
+          // and give it some content
+          someText4 = "ok, now u r " + JSON.stringify(dataJson.name)
+          const newContent4 = document.createTextNode(someText4);
+          console.log(someText4)
+
+          // add the text node to the newly created div
+          newDiv4.appendChild(newContent4);
+          newDiv4.setAttribute("class", "user-upd-status");
+          // newDiv4.setAttribute("style","white-space: pre-wrap");
+
+          // add the newly created element and its content into the DOM
+          const userModalInside = document.querySelector(".upd-btn-cont")
+          userModalInside.appendChild(newDiv4);
+
+
+        })
+    });
+
+
+    // --------------------------------------------------
+    // delete!
+    // --------------------------------------------------
+
+    const deleteUserBtn = document.getElementById("deleteBtn");
+
+    deleteUserBtn.addEventListener("click", e => {
+
+      e.preventDefault();
+
+      fetch("/dj-rest-auth/delete-account/", {
+          headers: {
+            Authorization: `Token ${localStorage.getItem('key')}`,
+            'Content-Type': 'application/json',
+          },
+          method: "DELETE",
+        })
+        .then(resp => {
+
+          console.log("Status: " + resp.status);
+
+          if (resp.ok) {
+            return resp.json()
+          }
+
+        })
+
+        .then(dataJson => {
+
+          //create a new div element
+          const newDiv5 = document.createElement("span");
+
+          // and give it some content
+          someText5 = JSON.stringify(dataJson)
+          const newContent5 = document.createTextNode(someText5);
+          console.log(someText5)
+
+          // add the text node to the newly created div
+          newDiv5.appendChild(newContent5);
+          newDiv5.setAttribute("class", "delete-feedback");
+
+          // add the newly created element and its content into the DOM
+          const userModalInside = document.querySelector(".delete-user-data-modal-body")
+          userModalInside.appendChild(newDiv5);
+          setTimeout(function() {
+            window.location = '/'
+          }, 1900);
+
+
+
+        })
+    });
+  </script>
+{% endblock inner %}

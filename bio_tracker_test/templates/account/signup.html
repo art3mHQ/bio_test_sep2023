@@ -1,0 +1,120 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}
+  {% translate "Signup" %}
+{% endblock head_title %}
+{% block inner %}
+  <h1>{% translate "Sign Up" %}</h1>
+  <p>
+    {% blocktranslate %}Already have an account!? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}
+  </p>
+  <form class="signup"
+        id="signup_form"
+        method="post"
+        action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    {{ form|crispy }}
+    {% if redirect_field_value %}
+      <input type="hidden"
+             name="{{ redirect_field_name }}"
+             value="{{ redirect_field_value }}" />
+    {% endif %}
+    <button class="btn btn-primary" type="submit">{% translate "Sign Up" %} »</button>
+  </form>
+  <script>
+    const signupForm = document.getElementById("signup_form");
+
+    signupForm.addEventListener("submit", e => {
+
+      event.preventDefault();
+
+      let csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+      let idEmail = document.getElementById("id_email");
+      let password = document.getElementById("id_password1");
+      let password2 = document.getElementById("id_password2");
+
+
+      const data = JSON.stringify({
+        "email": idEmail.value,
+        "password1": password.value,
+        "password2": password2.value,
+      });
+
+      fetch("/dj-rest-auth/registration/", {
+          credentials: 'same-origin',
+          mode: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: "post",
+          body: data
+        })
+        .then(resp => {
+
+          console.log("Status: " + resp.status);
+          if (resp.ok) {
+            window.location.href = "/";
+          }
+          return resp.json()
+        })
+
+        .then(dataJson => {
+          // dataToRecieved = JSON.parse(dataJson);
+          console.log(dataJson);
+
+          // wipe old error msg
+          const collection = document.querySelectorAll(".invalid-feedback");
+          if (collection) {
+            for (const elem of collection) {
+              elem.remove();
+            }
+          }
+
+          if (dataJson.email) {
+
+            // create a new div element
+            const newDiv1 = document.createElement("p");
+
+            // and give it some content
+            someText1 = JSON.stringify(dataJson.email)
+            const newContent1 = document.createTextNode(someText1);
+
+            // add the text node to the newly created div
+            newDiv1.appendChild(newContent1);
+            newDiv1.setAttribute("class", "invalid-feedback");
+            newDiv1.setAttribute("style", "display:block");
+
+            // add the newly created element and its content into the DOM
+            idEmail.parentNode.appendChild(newDiv1);
+          }
+
+          if (dataJson.password1 || dataJson.non_field_errors) {
+
+            // create a new div element
+            const newDiv2 = document.createElement("p");
+
+            // and give it some content
+            someText2 = JSON.stringify(dataJson.password1) || JSON.stringify(dataJson.non_field_errors)
+
+            const newContent2 = document.createTextNode(someText2);
+
+            // add the text node to the newly created div
+            newDiv2.appendChild(newContent2);
+            newDiv2.setAttribute("class", "invalid-feedback");
+            newDiv2.setAttribute("style", "display:block");
+
+            // add the newly created element and its content into the DOM
+            password.parentNode.appendChild(newDiv2);
+          }
+
+        })
+
+        .catch(err => {
+          console.log(err);
+        })
+    });
+  </script>
+{% endblock inner %}
