@@ -16,7 +16,7 @@ https://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.h
 
 2. Usage is more or less straitforward
 
-3. Api Swagger avalible at api/docs/ section (for admin)
+3. Swagger avalible at api/docs/ 
 
 ### Setting Up Your Users
 
